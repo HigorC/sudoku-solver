@@ -1,0 +1,24 @@
+{
+  "name": "sudoku-solver",
+  "version": "1.0.0",
+  "description": "A sudoku solver",
+  "main": "edges.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HigorC/sudoku-solver.git"
+  },
+  "author": "higor_oliveira@outlook.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HigorC/sudoku-solver/issues"
+  },
+  "homepage": "https://github.com/HigorC/sudoku-solver#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1"
+  }
+}
