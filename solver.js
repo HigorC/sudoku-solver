@@ -17,7 +17,6 @@ const possibilitiesMatrix = [
 ]
 
 const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-const numbersSet = new Set(numbers)
 
 // edge = edges.getEdge(7, 2)
 // console.log(edge);
@@ -25,17 +24,23 @@ const numbersSet = new Set(numbers)
 // console.log(getLineNumbers(7));
 // console.log(getColumnNumbers(2));
 
+while (sudokuHasNull()) {
+    for (let i = 0; i < sudoku.length; i++) {
+        for (let j = 0; j < sudoku[i].length; j++) {
+            const possibilities = generatePossibilities(i, j, sudoku[i][j]);
+            possibilitiesMatrix[i][j] = possibilities;
 
-for (let i = 0; i < sudoku.length; i++) {
-    for (let j = 0; j < sudoku[i].length; j++) {
-        possibilitiesMatrix[i][j] = generatePossibilities(i, j, sudoku[i][j]);
+            if (possibilities.length === 1) {
+                sudoku[i][j] = possibilities[0]
+            }
+        }
     }
+    console.log(possibilitiesMatrix);
 }
-console.log(possibilitiesMatrix);
-
 // console.log(generatePossibilities(0, 0));
 
-
+console.log("################################");
+console.log(sudoku);
 
 function generatePossibilities(i, j, except) {
     const edge = edges.getEdge(i, j)
@@ -47,9 +52,6 @@ function generatePossibilities(i, j, except) {
     allFoundNumbers.delete(except);
 
     const possibilities = []
-
-    // console.log(allFoundNumbers);
-    // console.log('possibilidades ' + possibilities);
 
     numbers.forEach(number => {
         if (!allFoundNumbers.has(number)) {
@@ -89,4 +91,8 @@ function getColumnNumbers(column) {
         }
     }
     return numbersInColumn
+}
+
+function sudokuHasNull() {
+    return sudoku.some(lines => lines.includes(null))
 }
