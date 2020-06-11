@@ -16,5 +16,8 @@
     "url": "https://github.com/HigorC/sudoku-solver/issues"
   },
   "homepage": "https://github.com/HigorC/sudoku-solver#readme",
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "express": "^4.17.1"
+  }
 }
