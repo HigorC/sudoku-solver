@@ -3,7 +3,7 @@
     <table>
       <tr v-for="(line, i) in sudokuMatrix" :key="i">
         <td v-for="(number, j) in line" :key="j">
-          <input type="text" v-model="sudokuMatrix[i][j]" />
+          <input type="text" min="1" max="9" @keydown="validateInput" v-model="sudokuMatrix[i][j]" />
         </td>
       </tr>
     </table>
@@ -23,6 +23,17 @@ export default {
     this.sudokuMatrix = matrix.generateBaseMatrix();
   },
   methods: {
+    /**
+     * Check if the value inputed is a number in range [1-9]
+     * @returns { Void }
+     */
+    validateInput: function(event) {
+      const keyPress = parseInt(event.key);
+
+      if ((isNaN(keyPress) || keyPress === 0 || event.target.value) && event.which !== 8) {
+        event.preventDefault()
+      }
+    },
     solve: function() {
       fetch("http://localhost:1020/api/solve", {
         method: "POST",
