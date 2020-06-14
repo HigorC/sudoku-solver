@@ -1,9 +1,9 @@
 <template>
   <div class="hello">
     <table>
-      <tr v-for="(line, i) in sudokuMatrix" :key="line">
-        <td v-for="(number, j) in line" :key="number">
-          <input type="text"  v-model="sudokuMatrix[i][j]"/>
+      <tr v-for="(line, i) in sudokuMatrix" :key="i">
+        <td v-for="(number, j) in line" :key="j">
+          <input type="text" v-model="sudokuMatrix[i][j]" />
         </td>
       </tr>
     </table>
@@ -24,15 +24,15 @@ export default {
   },
   methods: {
     solve: function() {
-      fetch("http://localhost:3000/api/solve", {
+      fetch("http://localhost:1020/api/solve", {
         method: "POST",
         body: this.sudokuMatrix
       })
         .then(res => {
-          return res.text();
+          return res.json();
         })
-        .then(res => {
-          const sudokuSolved = JSON.parse(res);
+        .then(sudokuSolved => {
+          // const sudokuSolved = JSON.parse(res);
           this.sudokuMatrix = sudokuSolved;
         });
     }
