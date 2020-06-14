@@ -19,20 +19,52 @@ const possibilitiesMatrix = [
 const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 function solveSudoku(sudoku) {
-    while (sudokuHasNull(sudoku)) {
-        for (let i = 0; i < sudoku.length; i++) {
-            for (let j = 0; j < sudoku[i].length; j++) {
-                const possibilities = generatePossibilities(i, j, sudoku[i][j], sudoku);
+    const solvedSudoku = Object.assign([], sudoku);
+
+    let count = 0;
+
+    let minPossibility = {
+        qtd: Number.MAX_VALUE,
+        i: -1,
+        j: -1
+    }
+
+    while (count < 100 && sudokuHasNull(solvedSudoku)) {
+        count++;
+
+        let hasChanged = false;
+
+        for (let i = 0; i < solvedSudoku.length; i++) {
+            for (let j = 0; j < solvedSudoku[i].length; j++) {
+
+                if (solvedSudoku[i][j]) break;
+
+                const possibilities = generatePossibilities(i, j, solvedSudoku[i][j], solvedSudoku);
                 possibilitiesMatrix[i][j] = possibilities;
-    
+                // BEST CHOICE
                 if (possibilities.length === 1) {
-                    sudoku[i][j] = possibilities[0]
+                    solvedSudoku[i][j] = possibilities[0];
+                    hasChanged = true;
+                } else if (possibilities.length < minPossibility.qtd) {
+                    // FOUND THE BEST POSSIBILITY TO CAN GUESS
+                    minPossibility =  {
+                        qtd: possibilities.length,
+                        possibilities,
+                        i,
+                        j
+                    }
                 }
             }
         }
+
+        if (!hasChanged) {
+            let guess = minPossibility.possibilities[0]
+            solvedSudoku[minPossibility.i][minPossibility.j] = guess
+            // console.log(minPossibility);
+        }
     }
-    return sudoku
-}
+    return solvedSudoku
+} 
 
 function generatePossibilities(i, j, except, sudoku) {
     const edge = edges.getEdge(i, j, sudoku)
@@ -86,7 +118,7 @@ function getColumnNumbers(column, sudoku) {
 }
 
 function sudokuHasNull(sudoku) {
-    return sudoku.some(lines => lines.includes(null))
+    return Array.isArray(sudoku) && sudoku.some(lines => lines.includes(null))
 }
 
-module.exports = ({solveSudoku})
+module.exports = ({ solveSudoku })
