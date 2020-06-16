@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser')
 const cors = require('cors')
-const port = process.env.PORT || 1020;
+const port = process.env.PORT || 3000;
 
 const solver = require('./solver')
 const generator = require('./generator')

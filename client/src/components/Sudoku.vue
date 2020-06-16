@@ -19,7 +19,7 @@ export default {
     sudokuMatrix: []
   }),
   mounted: function() {
-     fetch("http://localhost:1020/api/generate/")
+     fetch("http://localhost:3000/api/generate/")
      .then(res => res.json())
      .then(matrix => {
        this.sudokuMatrix = matrix;
@@ -40,7 +40,7 @@ export default {
       }
     },
     solve: function() {
-      fetch("http://localhost:1020/api/solve", {
+      fetch("http://localhost:3000/api/solve", {
          headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
