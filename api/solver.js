@@ -1,4 +1,5 @@
 const edges = require('./edges')
+const generator = require('./generator')
 
 // const sudoku = [
 //     [null, null, 7, null, null, null, null, 3, null],
@@ -16,6 +17,8 @@ const possibilitiesMatrix = [
     [], [], [], [], [], [], [], [], []
 ]
 
+const blacklistMatrix = generator.generateEmptySudoku()
+
 const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 function solveSudoku(sudoku) {
@@ -23,51 +26,117 @@ function solveSudoku(sudoku) {
 
     let count = 0;
 
-    let minPossibility = {
-        qtd: Number.MAX_VALUE,
-        i: -1,
-        j: -1
+    for (let i = 0; i < solvedSudoku.length; i++) {
+        for (let j = 0; j < solvedSudoku[i].length; j++) {
+            possibilitiesMatrix[i][j] = generatePossibilities(i, j, solvedSudoku[i][j], solvedSudoku);
+        }
     }
 
-    while (count < 100 && sudokuHasNull(solvedSudoku)) {
+    while (count < 3000 && sudokuHasNull(solvedSudoku)) {
         count++;
 
-        let hasChanged = false;
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                const realPossibilities = getRealPossibilities(possibilitiesMatrix[i][j], blacklistMatrix[i][j])
 
-        for (let i = 0; i < solvedSudoku.length; i++) {
-            for (let j = 0; j < solvedSudoku[i].length; j++) {
-
-                if (solvedSudoku[i][j]) break;
-
-                const possibilities = generatePossibilities(i, j, solvedSudoku[i][j], solvedSudoku);
-                possibilitiesMatrix[i][j] = possibilities;
-                // BEST CHOICE
-                if (possibilities.length === 1) {
-                    solvedSudoku[i][j] = possibilities[0];
-                    hasChanged = true;
-                } else if (possibilities.length < minPossibility.qtd) {
-                    // FOUND THE BEST POSSIBILITY TO CAN GUESS
-                    minPossibility =  {
-                        qtd: possibilities.length,
-                        possibilities,
-                        i,
-                        j
-                    }
+                if (realPossibilities.length === 1) {
+                    const uniquePossibility = realPossibilities[0]
+                    solvedSudoku[i][j] = uniquePossibility
+                    addBlacklistInLine(uniquePossibility, solvedSudoku, i)
+                    addBlacklistInColumn(uniquePossibility, solvedSudoku, j)
+                    addBlackListInQuadrant(uniquePossibility, solvedSudoku, i, j)
                 }
             }
         }
 
-        if (!hasChanged) {
-            let guess = minPossibility.possibilities[0]
-            solvedSudoku[minPossibility.i][minPossibility.j] = guess
-            // console.log(minPossibility);
+        // if (!hasChanged) {
+        //     let guess = minPossibility.possibilities[0]
+        //     solvedSudoku[minPossibility.i][minPossibility.j] = guess
+        // console.log(minPossibility);
+        // }
+    }
+    console.log(`Resolvido em ${count} iterações`);
+    
+    return solvedSudoku
+}
+
+/**
+ * Get possibilities without blacklist numbers
+ * @param { Array } possibilities 
+ * @param { Set } blacklist 
+ */
+function getRealPossibilities(possibilities, blacklist) {
+    if (!blacklist) return possibilities
+
+    return possibilities.filter(possibity => {
+        return !blacklist.has(possibity)
+    })
+}
+
+/**
+ * Add number in blacklist for each position to entire quadrant of matrix
+ * @param { Number } numberToBlackList 
+ * @param { Array<Array> } solvedSudoku 
+ * @param { Number } i - line index
+ * @param { Number } j - column index
+ * @returns { Void }
+ */
+function addBlackListInQuadrant(numberToBlackList, solvedSudoku, i, j){
+    const edge = edges.getEdge(i, j)
+
+    for (let i = edge.start_i; i <= edge.end_i; i++) {
+        for (let j = edge.start_j; j <= edge.end_j; j++) {
+            if (solvedSudoku[i][j]) continue
+
+            if (!blacklistMatrix[i][j]) {
+                blacklistMatrix[i][j] = new Set()
+            }
+
+            blacklistMatrix[i][j].add(numberToBlackList)
         }
     }
-    return solvedSudoku
-} 
+}
+
+/**
+ * Add number in blacklist for each position to entire line of matrix
+ * @param { Number } numberToBlackList
+ * @param { Array<Array> } solvedSudoku
+ * @param { Number } line
+ * @returns { Void }
+ */
+function addBlacklistInLine(numberToBlackList, solvedSudoku, line) {
+    for (let j = 0; j < 9; j++) {
+        if (solvedSudoku[line][j]) continue 
+
+        if (!blacklistMatrix[line][j]) {
+            blacklistMatrix[line][j] = new Set()
+        }
+
+        blacklistMatrix[line][j].add(numberToBlackList)
+    }
+}
+
+/**
+ * Add number in blacklist for each position to entire column of matrix
+ * @param { Number } numberToBlackList
+ * @param { Array<Array> } solvedSudoku
+ * @param { Number } column
+ * @returns { Void }
+ */
+function addBlacklistInColumn(numberToBlackList, solvedSudoku, column) {
+    for (let i = 0; i < 9; i++) {
+        if (solvedSudoku[i][column]) continue 
+
+        if (!blacklistMatrix[i][column]) {
+            blacklistMatrix[i][column] = new Set()
+        }
+
+        blacklistMatrix[i][column].add(numberToBlackList)
+    }
+}
 
 function generatePossibilities(i, j, except, sudoku) {
-    const edge = edges.getEdge(i, j, sudoku)
+    const edge = edges.getEdge(i, j)
     const quadrantNumbers = getQuadrantNumber(edge, sudoku);
     const lineNumbers = getLineNumbers(i, sudoku);
     const columnNumbers = getColumnNumbers(j, sudoku);
