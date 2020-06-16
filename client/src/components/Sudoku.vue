@@ -12,7 +12,6 @@
 </template>
 
 <script>
-import * as matrix from "../utils/matrix";
 
 export default {
   name: "Sudoku",
@@ -20,7 +19,13 @@ export default {
     sudokuMatrix: []
   }),
   mounted: function() {
-    this.sudokuMatrix = matrix.generateBaseMatrix();
+     fetch("http://localhost:1020/api/generate/")
+     .then(res => res.json())
+     .then(matrix => {
+       this.sudokuMatrix = matrix;
+     }).catch(err => {
+       console.log(err);
+     })
   },
   methods: {
     /**
@@ -36,8 +41,12 @@ export default {
     },
     solve: function() {
       fetch("http://localhost:1020/api/solve", {
+         headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
         method: "POST",
-        body: this.sudokuMatrix
+        body: JSON.stringify(this.sudokuMatrix)
       })
         .then(res => {
           return res.json();
