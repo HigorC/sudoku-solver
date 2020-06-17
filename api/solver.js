@@ -26,17 +26,22 @@ function solveSudoku(sudoku) {
 
     let count = 0;
 
-    for (let i = 0; i < solvedSudoku.length; i++) {
-        for (let j = 0; j < solvedSudoku[i].length; j++) {
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
             possibilitiesMatrix[i][j] = generatePossibilities(i, j, solvedSudoku[i][j], solvedSudoku);
         }
     }
 
-    while (count < 3000 && sudokuHasNull(solvedSudoku)) {
+    while (count < 100 && sudokuHasNull(solvedSudoku)) {
         count++;
 
+        const mapColumnPossibilites = []
         for (let i = 0; i < 9; i++) {
+            const mapLinePossibilites = []
+
             for (let j = 0; j < 9; j++) {
+                if (solvedSudoku[i][j]) continue;
+
                 const realPossibilities = getRealPossibilities(possibilitiesMatrix[i][j], blacklistMatrix[i][j])
 
                 if (realPossibilities.length === 1) {
@@ -46,8 +51,65 @@ function solveSudoku(sudoku) {
                     addBlacklistInColumn(uniquePossibility, solvedSudoku, j)
                     addBlackListInQuadrant(uniquePossibility, solvedSudoku, i, j)
                 }
+
+                // VERIFICO SE EXISTE ALGUMA POSSIVILIDADE QUE E UNICA NA LINHA
+                realPossibilities.forEach(possibity => {
+                    const found = mapLinePossibilites.find(el => el.possibity === possibity)
+
+                    if (!found) {
+                        mapLinePossibilites.push({
+                            index: j,
+                            count: 1,
+                            possibity
+                        })
+                    } else {
+                        const indexFound = mapLinePossibilites.indexOf(found)
+                        mapLinePossibilites[indexFound].count++
+                    }
+                })
+
+                // const realPossibilitiesC = getRealPossibilities(possibilitiesMatrix[j][i], blacklistMatrix[j][i])
+                // // VERIFICO SE EXISTE ALGUMA POSSIVILIDADE QUE E UNICA NA COLUNA
+                // realPossibilitiesC.forEach(possibity => {
+                //     const found = mapColumnPossibilites.find(el => el.possibity === possibity)
+
+                //     if (!found) {
+                //         mapColumnPossibilites.push({
+                //             index: j,
+                //             count: 1,
+                //             possibity
+                //         })
+                //     } else {
+                //         const indexFound = mapColumnPossibilites.indexOf(found)
+                //         mapColumnPossibilites[indexFound].count++
+                //     }
+                // })
             }
+
+            mapLinePossibilites
+                .filter(possibity => possibity.count === 1)
+                .forEach(possibity => {
+                    solvedSudoku[i][possibity.index] = possibity.possibity
+                    addBlacklistInLine(possibity.possibity, solvedSudoku, i)
+                    addBlacklistInColumn(possibity.possibity, solvedSudoku, possibity.index)
+                    addBlackListInQuadrant(possibity.possibity, solvedSudoku, i, possibity.index)
+                })
+
+            mapColumnPossibilites
+                .filter(possibity => possibity.count === 1)
+                .forEach(possibity => {
+                    // solvedSudoku[possibity.index][i] = possibity.possibity
+                    // addBlacklistInLine(possibity.possibity, solvedSudoku, possibity.index)
+                    // addBlacklistInColumn(possibity.possibity, solvedSudoku, i)
+                    // addBlackListInQuadrant(possibity.possibity, solvedSudoku, possibity.index, i)
+                })
+
+
+            console.log('eita');
+
         }
+
+
 
         // if (!hasChanged) {
         //     let guess = minPossibility.possibilities[0]
@@ -56,7 +118,7 @@ function solveSudoku(sudoku) {
         // }
     }
     console.log(`Resolvido em ${count} iterações`);
-    
+
     return solvedSudoku
 }
 
@@ -81,7 +143,7 @@ function getRealPossibilities(possibilities, blacklist) {
  * @param { Number } j - column index
  * @returns { Void }
  */
-function addBlackListInQuadrant(numberToBlackList, solvedSudoku, i, j){
+function addBlackListInQuadrant(numberToBlackList, solvedSudoku, i, j) {
     const edge = edges.getEdge(i, j)
 
     for (let i = edge.start_i; i <= edge.end_i; i++) {
@@ -106,7 +168,7 @@ function addBlackListInQuadrant(numberToBlackList, solvedSudoku, i, j){
  */
 function addBlacklistInLine(numberToBlackList, solvedSudoku, line) {
     for (let j = 0; j < 9; j++) {
-        if (solvedSudoku[line][j]) continue 
+        if (solvedSudoku[line][j]) continue
 
         if (!blacklistMatrix[line][j]) {
             blacklistMatrix[line][j] = new Set()
@@ -125,7 +187,7 @@ function addBlacklistInLine(numberToBlackList, solvedSudoku, line) {
  */
 function addBlacklistInColumn(numberToBlackList, solvedSudoku, column) {
     for (let i = 0; i < 9; i++) {
-        if (solvedSudoku[i][column]) continue 
+        if (solvedSudoku[i][column]) continue
 
         if (!blacklistMatrix[i][column]) {
             blacklistMatrix[i][column] = new Set()
