@@ -17,6 +17,11 @@ const possibilitiesMatrix = [
     [], [], [], [], [], [], [], [], []
 ]
 
+// Possibilites - Blacklist
+const realPossibilitiesMatrix = [
+    [], [], [], [], [], [], [], [], []
+]
+
 const blacklistMatrix = generator.generateEmptySudoku()
 
 const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -28,98 +33,118 @@ function solveSudoku(sudoku) {
 
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
-            possibilitiesMatrix[i][j] = generatePossibilities(i, j, solvedSudoku[i][j], solvedSudoku);
+            if (!solvedSudoku[i][j]) {
+                possibilitiesMatrix[i][j] = generatePossibilities(i, j, solvedSudoku[i][j], solvedSudoku);
+            } else {
+                addBlacklistInLine(solvedSudoku[i][j], solvedSudoku, i)
+                addBlacklistInColumn(solvedSudoku[i][j], solvedSudoku, j)
+                addBlackListInQuadrant(solvedSudoku[i][j], solvedSudoku, i, j)
+            }
         }
     }
 
-    while (count < 100 && sudokuHasNull(solvedSudoku)) {
+    while (count < 500 && sudokuHasNull(solvedSudoku)) {
         count++;
 
-        const mapColumnPossibilites = []
         for (let i = 0; i < 9; i++) {
-            const mapLinePossibilites = []
-
             for (let j = 0; j < 9; j++) {
                 if (solvedSudoku[i][j]) continue;
 
                 const realPossibilities = getRealPossibilities(possibilitiesMatrix[i][j], blacklistMatrix[i][j])
+                realPossibilitiesMatrix[i][j] = Object.assign([], realPossibilities);
 
                 if (realPossibilities.length === 1) {
-                    const uniquePossibility = realPossibilities[0]
-                    solvedSudoku[i][j] = uniquePossibility
-                    addBlacklistInLine(uniquePossibility, solvedSudoku, i)
-                    addBlacklistInColumn(uniquePossibility, solvedSudoku, j)
-                    addBlackListInQuadrant(uniquePossibility, solvedSudoku, i, j)
+                    solvePosition(realPossibilities[0], solvedSudoku, i, j)
+                } else {
+                    // verifico se alguma das possibiladedes é blacklsitada no quadrante inteiro
+                    realPossibilities.forEach(realPossibility => {
+                        if (isOnlyPossibilityOnQuadrant(realPossibility, solvedSudoku, i, j)) {
+                            solvePosition(realPossibility, solvedSudoku, i, j)
+                        }
+                    })
                 }
-
-                // VERIFICO SE EXISTE ALGUMA POSSIVILIDADE QUE E UNICA NA LINHA
-                realPossibilities.forEach(possibity => {
-                    const found = mapLinePossibilites.find(el => el.possibity === possibity)
-
-                    if (!found) {
-                        mapLinePossibilites.push({
-                            index: j,
-                            count: 1,
-                            possibity
-                        })
-                    } else {
-                        const indexFound = mapLinePossibilites.indexOf(found)
-                        mapLinePossibilites[indexFound].count++
-                    }
-                })
-
-                // const realPossibilitiesC = getRealPossibilities(possibilitiesMatrix[j][i], blacklistMatrix[j][i])
-                // // VERIFICO SE EXISTE ALGUMA POSSIVILIDADE QUE E UNICA NA COLUNA
-                // realPossibilitiesC.forEach(possibity => {
-                //     const found = mapColumnPossibilites.find(el => el.possibity === possibity)
-
-                //     if (!found) {
-                //         mapColumnPossibilites.push({
-                //             index: j,
-                //             count: 1,
-                //             possibity
-                //         })
-                //     } else {
-                //         const indexFound = mapColumnPossibilites.indexOf(found)
-                //         mapColumnPossibilites[indexFound].count++
-                //     }
-                // })
             }
-
-            mapLinePossibilites
-                .filter(possibity => possibity.count === 1)
-                .forEach(possibity => {
-                    solvedSudoku[i][possibity.index] = possibity.possibity
-                    addBlacklistInLine(possibity.possibity, solvedSudoku, i)
-                    addBlacklistInColumn(possibity.possibity, solvedSudoku, possibity.index)
-                    addBlackListInQuadrant(possibity.possibity, solvedSudoku, i, possibity.index)
-                })
-
-            mapColumnPossibilites
-                .filter(possibity => possibity.count === 1)
-                .forEach(possibity => {
-                    // solvedSudoku[possibity.index][i] = possibity.possibity
-                    // addBlacklistInLine(possibity.possibity, solvedSudoku, possibity.index)
-                    // addBlacklistInColumn(possibity.possibity, solvedSudoku, i)
-                    // addBlackListInQuadrant(possibity.possibity, solvedSudoku, possibity.index, i)
-                })
-
-
-            console.log('eita');
+            //Percorre a linha que acabou de gerar as possibilidades e verifica se existe alguma possibilidade q é unica
+            for (let j = 0; j < 9; j++) {
+                if (!solvedSudoku[i][j] && realPossibilitiesMatrix[i][j]) {
+                    realPossibilitiesMatrix[i][j].forEach(realPossibility => {
+                        if (!solvedSudoku[i][j] && isOnlyPossibilityInLine(realPossibility, solvedSudoku, i, j)) {
+                            solvePosition(realPossibility, solvedSudoku, i, j)
+                        }
+                    })
+                }
+            }
 
         }
 
-
-
-        // if (!hasChanged) {
-        //     let guess = minPossibility.possibilities[0]
-        //     solvedSudoku[minPossibility.i][minPossibility.j] = guess
-        // console.log(minPossibility);
-        // }
     }
     console.log(`Resolvido em ${count} iterações`);
 
     return solvedSudoku
+}
+
+/**
+ * Return true if the passed number is the only possibility among all the possibility vectors of the line
+ * @param { Number } possibility 
+ * @param { Array<Array> } solvedSudoku 
+ * @param { Number } actualLine 
+ * @param { Number } actualColumn 
+ * @returns { Boolean }
+ */
+function isOnlyPossibilityInLine(possibility, solvedSudoku, actualLine, actualColumn) {
+    for (let j = 0; j < 9; j++) {
+        if (j === actualColumn) continue;
+
+        if (solvedSudoku[actualLine][j] && solvedSudoku[actualLine][j] === possibility) {
+            return false
+        }
+
+        if (solvedSudoku[actualLine][j]) continue;
+
+        if (realPossibilitiesMatrix[actualLine][j] && realPossibilitiesMatrix[actualLine][j].includes(possibility)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * Returns true if the passed number is blacklist in all quadrant
+ * @param { Number } possibility
+ * @param { Array<Array> } solvedSudoku
+ * @param { Number } actualLine
+ * @param { Number } actualColumn
+ * @returns { Boolean }
+ */
+function isOnlyPossibilityOnQuadrant(possibility, solvedSudoku, actualLine, actualColumn) {
+    const edge = edges.getEdge(actualLine, actualColumn)
+
+    for (let i = edge.start_i; i <= edge.end_i; i++) {
+        for (let j = edge.start_j; j <= edge.end_j; j++) {
+            if (i === actualLine && j === actualColumn) continue;
+            if (solvedSudoku[i][j] && solvedSudoku[i][j] !== possibility) continue;
+
+            if (solvedSudoku[i][j] && solvedSudoku[i][j] === possibility ||
+                (blacklistMatrix[i][j] && !blacklistMatrix[i][j].has(possibility))) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+/**
+ * Put a number on solvedMatrix and blacklist himself in him line, column and quadrant
+ * @param { Number } number 
+ * @param { Array<Array> } solvedSudoku 
+ * @param { Number } i 
+ * @param { Number } j 
+ */
+function solvePosition(number, solvedSudoku, i, j) {
+    solvedSudoku[i][j] = number
+    addBlacklistInLine(number, solvedSudoku, i)
+    addBlacklistInColumn(number, solvedSudoku, j)
+    addBlackListInQuadrant(number, solvedSudoku, i, j)
 }
 
 /**
@@ -139,12 +164,12 @@ function getRealPossibilities(possibilities, blacklist) {
  * Add number in blacklist for each position to entire quadrant of matrix
  * @param { Number } numberToBlackList 
  * @param { Array<Array> } solvedSudoku 
- * @param { Number } i - line index
- * @param { Number } j - column index
+ * @param { Number } actualLine - line index
+ * @param { Number } actualColumn - column index
  * @returns { Void }
  */
-function addBlackListInQuadrant(numberToBlackList, solvedSudoku, i, j) {
-    const edge = edges.getEdge(i, j)
+function addBlackListInQuadrant(numberToBlackList, solvedSudoku, actualLine, actualColumn) {
+    const edge = edges.getEdge(actualLine, actualColumn)
 
     for (let i = edge.start_i; i <= edge.end_i; i++) {
         for (let j = edge.start_j; j <= edge.end_j; j++) {
