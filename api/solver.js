@@ -74,7 +74,23 @@ function solveSudoku(sudoku) {
                     })
                 }
             }
+        }
 
+        //cntinuar aqui, soluciona bastante caso, mas ta gerando resultado erado
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                if (!solvedSudoku[j][i] && realPossibilitiesMatrix[j][i]) {
+
+                    const uniquePossibility = realPossibilitiesMatrix[j][i].find(realPossibility => {
+                        return isOnlyPossibilityInColumn(realPossibility, solvedSudoku, j, i)
+                    })
+
+                    if (uniquePossibility && !solvedSudoku[j][i])  {
+                        solvePosition(uniquePossibility, solvedSudoku, j, i)
+                        break;
+                    }
+                }
+            }
         }
 
     }
@@ -102,6 +118,31 @@ function isOnlyPossibilityInLine(possibility, solvedSudoku, actualLine, actualCo
         if (solvedSudoku[actualLine][j]) continue;
 
         if (realPossibilitiesMatrix[actualLine][j] && realPossibilitiesMatrix[actualLine][j].includes(possibility)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * Return true if the passed number is the only possibility among all the possibility vectors of the column
+ * @param { Number } possibility 
+ * @param { Array<Array> } solvedSudoku 
+ * @param { Number } actualLine 
+ * @param { Number } actualColumn 
+ * @returns { Boolean }
+ */
+function isOnlyPossibilityInColumn(possibility, solvedSudoku, actualLine, actualColumn) {
+    for (let i = 0; i < 9; i++) {
+        if (i === actualLine) continue;
+
+        if (solvedSudoku[i][actualColumn] && solvedSudoku[i][actualColumn] === possibility) {
+            return false
+        }
+
+        if (solvedSudoku[i][actualColumn]) continue;
+
+        if (realPossibilitiesMatrix[i][actualColumn] && realPossibilitiesMatrix[i][actualColumn].includes(possibility)) {
             return false;
         }
     }
