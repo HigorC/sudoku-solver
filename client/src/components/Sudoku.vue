@@ -12,20 +12,20 @@
 </template>
 
 <script>
-
 export default {
   name: "Sudoku",
   data: () => ({
     sudokuMatrix: []
   }),
   mounted: function() {
-     fetch("http://localhost:3000/api/generate/")
-     .then(res => res.json())
-     .then(matrix => {
-       this.sudokuMatrix = matrix;
-     }).catch(err => {
-       console.log(err);
-     })
+    fetch("http://localhost:3000/api/generate/")
+      .then(res => res.json())
+      .then(matrix => {
+        this.sudokuMatrix = matrix;
+      })
+      .catch(err => {
+        console.log(err);
+      });
   },
   methods: {
     /**
@@ -35,16 +35,27 @@ export default {
     validateInput: function(event) {
       const keyPress = parseInt(event.key);
 
-      if ((isNaN(keyPress) || keyPress === 0 || event.target.value) && event.which !== 8) {
-        event.preventDefault()
+      if (
+        (isNaN(keyPress) || keyPress === 0 || event.target.value) &&
+        event.which !== 8
+      ) {
+        event.preventDefault();
       }
     },
     solve: function() {
+      const inputs = document.querySelectorAll("table input");
+
+      Array.from(inputs).forEach(input => {
+        if (input.value) {
+          input.setAttribute("style", "color:black");
+        }
+      });
+
       fetch("http://localhost:3000/api/solve", {
-         headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
         method: "POST",
         body: JSON.stringify(this.sudokuMatrix)
       })
@@ -54,6 +65,13 @@ export default {
         .then(sudokuSolved => {
           // const sudokuSolved = JSON.parse(res);
           this.sudokuMatrix = sudokuSolved;
+
+          Array.from(inputs).forEach(input => {
+            if (!input.getAttribute("style")) {
+              input.setAttribute("style", "color:green");
+              input.setAttribute("style", "background: #a5f5a5;");
+            }
+          });
         });
     }
   }
@@ -67,6 +85,8 @@ table {
     text-align: center;
     width: 40px;
     height: 40px;
+    background: #c9d5c9;
+    border: none;
   }
 
   tr {
