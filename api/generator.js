@@ -31,6 +31,20 @@ const generateSudoku = () => {
     //     [4, null, 2, null, 5, null, null, null, null],
     //     [null, null, null, null, null, null, 5, null, null]
     // ]
+
+    //evil
+    return [
+        [null, null, 7, null, null, null, 8, null, 3],
+        [null, null, null, 6, null, 3, null, 2, null,],
+        [null, null, null, 5, null, null, 4, null, null],
+        [null, null, 9, 4, null, null, null, null, 2],
+        [null, null, null, null, 5, null, null, 3, null],
+        [8, 5, null, 7, null, null, 6, null, 4],
+        [2, 1, null, 3, null, null, null, null, 7],
+        [null, 9, null, null, 7, null, null, null, null],
+        [4, null, null, null, null, 6, null, null, null]
+    ]
+
     // Impossible
     return [
         [null, null, 3, null, null, 6, null, null, 4],
